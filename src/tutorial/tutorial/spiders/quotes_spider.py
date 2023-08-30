@@ -38,9 +38,32 @@ class TwoGisBanksSpider(scrapy.Spider):
         #     #     "name": bank.css("span._1al0wlf::text").get()
         #     # }
         test = []
-        for bank_name, bank_rate, review_amount, bank_adres in zip(response.css("span._1al0wlf"), response.css("div._y10azs"), response.css("div._jspzdm"), response.css("span._14quei")):
-            print(bank_name.css("::text").get(), bank_rate.css("::text").get(), review_amount.css("::text").get(), bank_adres.css('::text').getall()[1])
-            test.append((bank_name.css("::text").get(), bank_rate.css("::text").get(), review_amount.css("::text").get(), bank_adres.css('::text').getall()[1]))
-        
+        for bank_name, bank_rate, review_amount, bank_adres in zip(
+            response.css("span._1al0wlf"),
+            response.css("div._y10azs"),
+            response.css("div._jspzdm"),
+            response.css("span._14quei"),
+        ):
+            print(
+                bank_name.css("::text").get(),
+                bank_rate.css("::text").get(),
+                review_amount.css("::text").get(),
+                bank_adres.css("::text").getall()[1],
+            )
+            test.append(
+                (
+                    bank_name.css("::text").get(),
+                    bank_rate.css("::text").get(),
+                    review_amount.css("::text").get(),
+                    bank_adres.css("::text").getall()[1],
+                )
+            )
+
         return test
-            # yield bank_name.css("::text").get(), bank_rate.css("::text").get(), review_amount.css("::text").get(), bank_adres.css('::text').getall()[1]
+        # yield bank_name.css("::text").get(), bank_rate.css("::text").get(), review_amount.css("::text").get(), bank_adres.css('::text').getall()[1]
+
+
+a = response.css("div._1x4k6z7").get()
+b = a.css("a")
+bb = b[0]
+bb.attrib["href"]
