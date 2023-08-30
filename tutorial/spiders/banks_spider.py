@@ -1,9 +1,18 @@
 import scrapy
+import logging
 import time
 import re
+
 from tutorial.psql_ops import insert_bank_info
 
-from pathlib import Path
+
+LOGGER = logging.getLogger(__name__)
+
+
+BANK_NAME_TAG = "span._1al0wlf"
+BANK_ADDRESS_TAG = "div._y10azs"
+BANK_RATE_TAG = "div._jspzdm"
+BANK_REVIEW_AMOUNT_TAG = "span._14quei"
 
 
 class TwoGisBanksSpider(scrapy.Spider):
@@ -11,32 +20,58 @@ class TwoGisBanksSpider(scrapy.Spider):
     start_urls = ["https://2gis.ru/spb/search/bank"]
 
     def parse(self, response):
-        banks_info = []
-        for bank_name, bank_rate, review_amount, bank_adres in zip(
-            response.css("span._1al0wlf"),
-            response.css("div._y10azs"),
-            response.css("div._jspzdm"),
-            response.css("span._14quei"),
-        ):
-            # print(
-            #     bank_name.css("::text").get(),
-            #     bank_rate.css("::text").get(),
-            #     review_amount.css("::text").get(),
-            #     bank_adres.css("::text").getall()[1],
-            # )
-            banks_info.append(
-                (
-                    bank_name.css("::text").get(),
-                    bank_adres.css("::text").getall()[1],
-                    bank_rate.css("::text").get(),
-                    int(re.findall("^[0-9]*", review_amount.css("::text").get())[0]),
-                )
-            )
-        print(insert_bank_info(banks_info))
+        if response is None:
+            return
 
+        try:
+            names = response.css(BANK_NAME_TAG)
+            addresses = response.css(BANK_ADDRESS_TAG)
+            rates = response.css(BANK_RATE_TAG)
+            review_amounts = response.css(BANK_REVIEW_AMOUNT_TAG)
+
+        except Exception as e:
+            LOGGER.error(
+                f"Error occured when you tried to extract tag from response: {e}"
+            )
+            return
+
+        if not all([names, addresses, rates, review_amounts]):
+            return
+
+        banks_info = []
+        for name, rate, review_amount, address in zip(
+            names, addresses, rates, review_amounts
+        ):
+            if not all([name, rate, review_amount, address]):
+                return
+
+            try:
+                name = name.css("::text").get()
+                address = address.css("::text").getall()[1]
+                rate = rate.css("::text").get()
+                review_amount = re.findall(
+                    "^[0-9]*", review_amount.css("::text").get()
+                )[0]
+
+            except Exception as e:
+                LOGGER.error(
+                    f"Error occured when you tried to extract values from tags: {e}"
+                )
+                return
+
+            if not all([name, address, rate, review_amount]):
+                return
+
+            banks_info.append((name, address, rate, int(review_amount)))
+
+        insert_bank_info(banks_info)
+
+        # NEED TO REFACT
         links_list = response.css("div._1x4k6z7").css("a")
 
         time.sleep(5)
         for link in links_list:
             next_link = response.urljoin(link.attrib["href"])
             yield scrapy.Request(next_link, callback=self.parse)
+
+        return

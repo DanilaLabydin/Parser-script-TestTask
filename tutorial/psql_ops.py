@@ -33,8 +33,6 @@ def insert_bank_info(banks_list):
         with conn.cursor() as cursor:
             cursor.executemany(query, banks_list)
 
-            # colnames = [desc[0] for desc in cursor.description]
-            # row = cursor.fetchone()
         conn.commit()
         conn.close()
         return True
