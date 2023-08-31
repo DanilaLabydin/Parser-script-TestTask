@@ -3,7 +3,7 @@ import logging
 import time
 import re
 
-from tutorial.psql_ops import insert_bank_info
+from bank_parser.psql_ops import insert_bank_info
 
 
 LOGGER = logging.getLogger(__name__)

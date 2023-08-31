@@ -1,7 +1,7 @@
 import logging
 import psycopg2
 
-from tutorial.config import db_config
+from bank_parser.config import db_config
 
 
 LOGGER = logging.getLogger(__name__)
