@@ -13,6 +13,7 @@ BANK_NAME_TAG = "span._1al0wlf"
 BANK_ADDRESS_TAG = "div._y10azs"
 BANK_RATE_TAG = "div._jspzdm"
 BANK_REVIEW_AMOUNT_TAG = "span._14quei"
+BANK_LIST_LINKS = "div._1x4k6z7"
 
 
 class TwoGisBanksSpider(scrapy.Spider):
@@ -66,12 +67,22 @@ class TwoGisBanksSpider(scrapy.Spider):
 
         insert_bank_info(banks_info)
 
-        # NEED TO REFACT
-        links_list = response.css("div._1x4k6z7").css("a")
+        try:
+            links_list = response.css(BANK_LIST_LINKS).css("a")
+        except Exception as e:
+            LOGGER.error(f"Error occured when you tried to get the list of links")
+            return
+
+        if links_list is None:
+            return
 
         time.sleep(5)
         for link in links_list:
-            next_link = response.urljoin(link.attrib["href"])
+            try:
+                next_link = response.urljoin(link.attrib["href"])
+            except Exception as e:
+                continue
+
             yield scrapy.Request(next_link, callback=self.parse)
 
         return
